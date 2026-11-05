@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#101611">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Crect width='40' height='40' rx='8' fill='%23141b16'/%3E%3Ctext x='20' y='29' text-anchor='middle' font-family='Georgia' font-size='27' fill='%23a4bc83'%3EH%3C/text%3E%3C/svg%3E">
+  <title>Hearthlands — The Ironwood Chronicle</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <a class="brand" href="#overview" aria-label="Hearthlands home">
+        <span class="brand-mark">H</span><span class="brand-name">HEARTH<span>LANDS</span><small>THE IRONWOOD CHRONICLE</small></span>
+      </a>
+      <div class="realm-label"><span class="realm-dot"></span> REALM: ASHEN VALE <span class="season">S.04</span></div>
+      <div class="side-section-label">YOUR HOLDFAST</div>
+      <button class="village-select" id="villageSelect"><span class="village-icon">⌂</span><span><b id="villageName">Mosswick</b><small id="villageCoords">(502, 488) · Your village</small></span><span class="chevron">⌄</span></button>
+      <nav class="main-nav" aria-label="Main navigation">
+        <button class="nav-item active" data-view="overview"><span class="nav-icon">◫</span>Overview<span class="nav-badge">1</span></button>
+        <button class="nav-item" data-view="village"><span class="nav-icon">⌂</span>Village</button>
+        <button class="nav-item" data-view="map"><span class="nav-icon">⊞</span>World map</button>
+        <button class="nav-item" data-view="barracks"><span class="nav-icon">⚔</span>Barracks</button>
+        <button class="nav-item" data-view="reports"><span class="nav-icon">▤</span>Reports<span class="unread-dot"></span></button>
+      </nav>
+      <div class="sidebar-bottom">
+        <div class="season-card"><span class="season-emblem">✳</span><div><small>SEASON ENDS IN</small><b>18d 06h</b></div><span class="season-arrow">↗</span></div>
+        <button class="profile"><span class="avatar">R</span><span><b>Runa of Mosswick</b><small>Chieftain · Level 8</small></span><span class="more">···</span></button>
+      </div>
+    </aside>
+
+    <main class="main-content">
+      <header class="topbar">
+        <div class="breadcrumb"><span>ASHEN VALE</span><span class="crumb-sep">/</span><b id="pageCrumb">OVERVIEW</b></div>
+        <div class="top-actions"><span class="server-status"><i></i> WORLD LIVE</span><button class="icon-button" id="helpBtn" aria-label="Help">?</button><button class="notice-button" id="notifications" aria-label="Notifications">♧<i></i></button><span class="top-divider"></span><span class="player-chip"><span class="avatar small-avatar">R</span><span>Runa</span><span class="chevron">⌄</span></span></div>
+      </header>
+
+      <div class="page-wrap">
+        <section class="welcome-row">
+          <div><div class="eyebrow"><span class="live-line"></span> DAY 42 OF THE ASHEN MOON <span class="weather">☁ &nbsp;MISTFALL</span></div><h1 id="pageTitle">The valley remembers.</h1><p class="welcome-copy">A quiet morning in Mosswick. Your people are waiting on what comes next.</p></div>
+          <button class="primary-button" id="quickBuild"><span>＋</span> Build something</button>
+        </section>
+
+        <section class="resource-strip" aria-label="Village resources">
+          <div class="resource-card"><span class="resource-icon wood-icon">⌁</span><div class="resource-meta"><small>TIMBER</small><b id="woodCount">1,240</b><span><i class="up">↗</i> <span id="woodRate">+32</span> / hr</span></div><div class="resource-meter"><i id="woodMeter"></i></div></div>
+          <div class="resource-card"><span class="resource-icon stone-icon">⬡</span><div class="resource-meta"><small>STONE</small><b id="stoneCount">860</b><span><i class="up">↗</i> <span id="stoneRate">+24</span> / hr</span></div><div class="resource-meter"><i id="stoneMeter"></i></div></div>
+          <div class="resource-card"><span class="resource-icon iron-icon">◆</span><div class="resource-meta"><small>IRON</small><b id="ironCount">415</b><span><i class="up">↗</i> <span id="ironRate">+16</span> / hr</span></div><div class="resource-meter"><i id="ironMeter"></i></div></div>
+          <div class="resource-card population-card"><span class="resource-icon pop-icon">♟</span><div class="resource-meta"><small>POPULATION</small><b><span id="popCount">84</span><em> / 120</em></b><span><i class="neutral">●</i> 36 free villagers</span></div><div class="resource-meter"><i id="popMeter"></i></div></div>
+        </section>
+
+        <div class="content-grid">
+          <div class="primary-column">
+            <section class="panel settlement-panel">
+              <div class="panel-heading"><div><div class="eyebrow">YOUR SETTLEMENT <span class="subtle">· 502, 488</span></div><h2>Mosswick <span class="level-pill">LEVEL 8</span></h2></div><button class="text-action" data-view="village">Manage village <span>↗</span></button></div>
+              <div class="settlement-art">
+                <div class="art-haze"></div><div class="sun-orb"></div><div class="ridge ridge-back"></div><div class="ridge ridge-front"></div><div class="forest forest-left">♠ ♠ ♠ ♠ ♠</div><div class="forest forest-right">♠ ♠ ♠ ♠</div>
+                <div class="village-scene"><div class="scene-smoke"></div><div class="hall"><span>✦</span></div><div class="house house-one"></div><div class="house house-two"></div><div class="house house-three"></div><div class="palisade"></div><div class="scene-label"><b>THE OLD HEARTH</b><small>Your people are safe behind the palisade.</small></div></div>
+                <div class="art-caption"><span>☁ &nbsp;Low mist over the valley</span><span>VIEW SETTLEMENT &nbsp; ↗</span></div>
+              </div>
+              <div class="building-list" id="buildingList"></div>
+            </section>
+            <section class="panel map-panel" id="mapPreview">
+              <div class="panel-heading"><div><div class="eyebrow">THE KNOWN WORLD</div><h2>Borderlands <span class="subtle">· 5 × 5 leagues</span></h2></div><button class="text-action" data-view="map">Open world map <span>↗</span></button></div>
+              <div class="map-preview-layout"><div class="mini-map" id="miniMap" aria-label="Map of nearby settlements"></div><div class="map-key"><div><i class="key-dot own"></i><span><b>Mosswick</b><small>Your holdfast</small></span></div><div><i class="key-dot ally"></i><span><b>Friendly tribe</b><small>2 settlements</small></span></div><div><i class="key-dot enemy"></i><span><b>Unclaimed / rival</b><small>Within reach</small></span></div><div class="map-tip"><span>⌖</span> Click a settlement to inspect it and plan your next move.</div></div></div>
+            </section>
+          </div>
+
+          <aside class="right-column">
+            <section class="panel tribe-panel"><div class="panel-heading compact"><div><div class="eyebrow">YOUR TRIBE</div><h2>The Reedbound</h2></div><span class="tribe-mark">ᛉ</span></div><div class="tribe-stats"><div><b>12</b><small>MEMBERS</small></div><div><b>#08</b><small>RANK</small></div><div><b>6,420</b><small>RENOWN</small></div></div><div class="tribe-roster"><div class="roster-avatars"><span>R</span><span>K</span><span>M</span><span>A</span><span>+</span></div><span>4 members online</span><button id="tribeBtn">Visit tribe hall ↗</button></div></section>
+            <section class="panel orders-panel"><div class="panel-heading compact"><div><div class="eyebrow">VILLAGE ORDERS</div><h2>In progress <span class="count-pill" id="orderCount">2</span></h2></div><button class="tiny-add" id="addOrder" aria-label="Add an order">＋</button></div><div class="order-list" id="orderList"></div><div class="panel-footer" id="ordersFooter">QUEUE CAPACITY &nbsp; <span class="capacity"><i></i><i></i><i></i><i></i><i class="empty"></i></span> &nbsp; 4 / 5</div></section>
+            <section class="panel activity-panel"><div class="panel-heading compact"><div><div class="eyebrow">FROM THE CHRONICLE</div><h2>Recent activity</h2></div><button class="text-action" data-view="reports">All reports <span>↗</span></button></div><div class="activity-list" id="activityList"></div></section>
+            <div class="daily-quote"><span>“</span><p>We do not inherit the forest.<br>We borrow it from our children.</p><small>— OLD REEDBOUND SAYING</small><i>✳</i></div>
+          </aside>
+        </div>
+        <footer class="page-footer"><span>HEARTHLANDS <i>·</i> A GAME OF ROOTS & RECKONING</span><span>SERVER TIME <b id="serverTime">08:42:16</b> <i>·</i> BUILD 0.4.2</span></footer>
+      </div>
+    </main>
+  </div>
+  <div class="toast" id="toast" role="status"></div>
+  <div class="modal-backdrop" id="modalBackdrop" aria-hidden="true"><section class="modal" id="modal" role="dialog" aria-modal="true"><button class="modal-close" id="modalClose" aria-label="Close">×</button><div id="modalContent"></div></section></div>
+  <script src="game.js"></script>
+</body>
+</html>
