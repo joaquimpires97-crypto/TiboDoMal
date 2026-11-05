@@ -5,7 +5,8 @@ import { fileURLToPath } from 'node:url';
 import { randomBytes } from 'node:crypto';
 
 const ROOT = path.dirname(fileURLToPath(import.meta.url));
-const PORT = Number(process.env.PORT || 3002);
+const STATIC_DIR = path.join(ROOT, 'dist');
+const PORT = Number(process.env.PORT || 3000);
 const rooms = new Map();
 const stops = ['The Ember Ferry', 'The Bracken Mile', 'Glasswater Ford', 'Bellweather', 'The Old Observatory', 'Home'];
 const captions = ['Where the old road begins to disappear.', 'A green corridor, tangled with old stories.', 'The river keeps a thousand borrowed skies.', 'A village built to listen for the wind.', 'A quiet place above the clouds.', 'The long way home, made shorter together.'];
@@ -192,8 +193,8 @@ const server = http.createServer(async (req, res) => {
     }
     let pathname = decodeURIComponent(url.pathname);
     if (pathname === '/') pathname = '/index.html';
-    const fullPath = path.resolve(ROOT, `.${pathname}`);
-    if (!fullPath.startsWith(ROOT + path.sep)) { res.writeHead(403); res.end('Forbidden'); return; }
+    const fullPath = path.resolve(STATIC_DIR, `.${pathname}`);
+    if (!fullPath.startsWith(STATIC_DIR + path.sep)) { res.writeHead(403); res.end('Forbidden'); return; }
     const file = await readFile(fullPath);
     res.writeHead(200, { 'Content-Type': contentTypes[path.extname(fullPath)] || 'application/octet-stream', 'Cache-Control': 'no-cache' });
     res.end(file);
