@@ -17,3 +17,17 @@
 - 🌍 [Create with OMGithub](https://go.ondev.store/).
 - 🧬 [Explore the remix source](https://github.com/joaquimpires97-crypto/TiboDoMal).
 <!-- omgithub:readme:end -->
+
+## Wayfarer
+
+A small, text-led cooperative journey for up to six travelers. Make a room, share its five-character code, and take one action each day: travel, forage, rest, or scout. Your party has to balance provisions and spirit to reach home together. The world responds to the whole party, so choices and story beats are shared live.
+
+### Run it locally
+
+Requires Node.js 18 or newer; there are no external packages.
+
+```sh
+npm start
+```
+
+Open [http://localhost:3002](http://localhost:3002). Leave the room-code field blank to create a journey, then share the displayed code with other players. To play over the internet, host the Node server on a reachable machine and share its URL and room code. Rooms are held in server memory and reset when the server restarts.
