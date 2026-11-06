@@ -1,6 +1,8 @@
 (() => {
   const STORE = 'hearthlands-save-v1';
-  const now = Date.now();
+  let clockOffset = 0;
+  const gameNow = () => Date.now() + clockOffset;
+  const now = gameNow();
   const initial = {
     resources: { wood: 1240, stone: 860, iron: 415 }, population: 84,
     buildings: { 'Timber camp': 6, 'Stone quarry': 5, 'Iron mine': 4, 'Longhouse': 3 },
@@ -37,14 +39,18 @@
     $('#buildingList').innerHTML = names.map(name => `<div class="building-item"><div class="building-name"><i>${icons[name]}</i>${name}</div><div class="building-level">Level ${state.buildings[name] || 1}</div><div class="building-progress"><i style="width:${Math.min(96, 38 + (state.buildings[name] || 1) * 8)}%"></i></div></div>`).join('');
   }
   function drawOrders() {
-    const orders = state.orders.slice(0, 4);
-    $('#orderCount').textContent = state.orders.length;
-    $('#orderList').innerHTML = orders.length ? orders.map(o => {
-      const remaining = Math.max(0, Math.ceil((o.end - Date.now()) / 1000));
-      const progress = Math.min(100, Math.max(3, ((o.duration - remaining) / o.duration) * 100));
+    const timers = [
+      ...state.orders.map(o => ({ ...o, timerLabel: o.type === 'build' ? 'Construction' : 'Training' })),
+      ...state.marches.map(m => ({ name: `${m.kind === 'scout' ? 'Scouts' : 'Warband'} → ${m.target}`, icon: m.kind === 'scout' ? '⌖' : '⚔', start: m.start || m.returnAt - (m.kind === 'scout' ? 30_000 : 60_000), end: m.returnAt, duration: m.duration || (m.kind === 'scout' ? 30 : 60), timerLabel: m.kind === 'scout' ? 'Scouting' : 'Returning from raid' }))
+    ].sort((a, b) => a.end - b.end);
+    $('#orderCount').textContent = timers.length;
+    $('#orderList').innerHTML = timers.length ? timers.slice(0, 4).map(o => {
+      const remaining = Math.max(0, Math.ceil((o.end - gameNow()) / 1000));
+      const elapsed = Math.max(0, (gameNow() - o.start) / 1000);
+      const progress = Math.min(100, Math.max(3, (elapsed / o.duration) * 100));
       const time = remaining > 60 ? `${Math.floor(remaining / 60)}m ${String(remaining % 60).padStart(2, '0')}s` : `${remaining}s`;
-      return `<div class="order-item"><span class="order-icon">${o.icon}</span><span class="order-info"><b>${o.name}</b><small>${o.type === 'build' ? 'Construction' : 'Training'}</small></span><span class="order-time">${time}</span><span class="order-progress"><i style="width:${progress}%"></i></span></div>`;
-    }).join('') : '<div class="empty-state">No orders underway. Your people are ready.</div>';
+      return `<div class="order-item"><span class="order-icon">${o.icon}</span><span class="order-info"><b>${o.name}</b><small>${o.timerLabel}</small></span><span class="order-time">${time}</span><span class="order-progress"><i style="width:${progress}%"></i></span></div>`;
+    }).join('') : '<div class="empty-state">No active timers. Your people are ready.</div>';
     const used = Math.min(5, state.orders.length); $('#ordersFooter').innerHTML = `QUEUE CAPACITY &nbsp; <span class="capacity">${Array.from({ length: 5 }, (_, i) => `<i class="${i >= used ? 'empty' : ''}"></i>`).join('')}</span> &nbsp; ${used} / 5`;
   }
   function drawActivity() {
@@ -62,7 +68,8 @@
     const c = cost[name] || { wood: 0, stone: 0, iron: 0 };
     if (Object.keys(c).some(k => state.resources[k] < c[k])) { toast('Not enough resources for that order.'); return false; }
     Object.keys(c).forEach(k => state.resources[k] -= c[k]);
-    state.orders.push({ id: Date.now() + Math.random(), type, name, icon, duration: seconds, start: Date.now(), end: Date.now() + seconds * 1000, ...payload });
+    const started = gameNow();
+    state.orders.push({ id: started + Math.random(), type, name, icon, duration: seconds, start: started, end: started + seconds * 1000, ...payload });
     save(); drawResources(); toast(`${name} added to village orders.`); return true;
   }
   function completeOrder(o) {
@@ -77,14 +84,35 @@
       toast(`${o.amount} ${o.unit} are ready in the barracks.`);
     }
   }
+  async function syncGlobalClock() {
+    const syncDot = $('#clockSync');
+    try {
+      const startedAt = Date.now();
+      const response = await fetch('https://worldtimeapi.org/api/timezone/Europe/Lisbon', { cache: 'no-store' });
+      if (!response.ok) throw new Error('Time service unavailable');
+      const data = await response.json();
+      if (!Number.isFinite(data.unixtime)) throw new Error('Invalid time response');
+      const finishedAt = Date.now();
+      clockOffset = data.unixtime * 1000 - (startedAt + finishedAt) / 2;
+      syncDot.classList.remove('offline');
+      syncDot.classList.add('synced');
+      syncDot.title = 'Synced to the Lisbon world clock';
+      tick();
+    } catch {
+      syncDot.classList.add('offline');
+      syncDot.title = 'Lisbon time service unavailable; using this device clock';
+    }
+  }
   function tick() {
-    const stamp = Date.now(); const elapsed = Math.min(28800, Math.max(0, (stamp - (state.lastTick || stamp)) / 1000));
+    const stamp = gameNow(); const elapsed = Math.min(28800, Math.max(0, (stamp - (state.lastTick || stamp)) / 1000));
     const r = rates(); for (const k of Object.keys(r)) state.resources[k] = Math.min(5000, state.resources[k] + r[k] * elapsed / 3600);
     state.lastTick = stamp;
     const done = state.orders.filter(o => o.end <= stamp); state.orders = state.orders.filter(o => o.end > stamp); done.forEach(completeOrder);
     const arrivals = state.marches.filter(m => m.returnAt <= stamp); state.marches = state.marches.filter(m => m.returnAt > stamp);
     arrivals.forEach(resolveMarch); drawResources(); save();
-    $('#serverTime').textContent = new Date().toLocaleTimeString('en-GB', { hour12: false });
+    const lisbonTime = new Date(stamp).toLocaleTimeString('en-GB', { timeZone: 'Europe/Lisbon', hour12: false });
+    $('#globalTime').textContent = lisbonTime;
+    $('#serverTime').textContent = lisbonTime;
   }
   function resolveMarch(m) {
     if (m.kind === 'scout') {
@@ -164,7 +192,8 @@
     if (kind === 'scout' && (state.army.Scouts || 0) < count) { toast('You need scouts. Train them in the barracks.'); return false; }
     if (kind === 'scout') state.army.Scouts -= count;
     const duration = kind === 'scout' ? 30 : 60;
-    state.marches.push({ kind, target, unit, troops: count, defenders, returnAt: Date.now() + duration * 1000 });
+    const started = gameNow();
+    state.marches.push({ kind, target, unit, troops: count, defenders, start: started, duration, returnAt: started + duration * 1000 });
     addReport('⚑', `${kind === 'scout' ? 'Scouts' : 'Warband'} departed`, `${count} ${unit.toLowerCase()} set out for ${target}. They will return in about ${duration} seconds.`);
     save(); drawResources(); toast(`${kind === 'scout' ? 'Scouts' : 'Warband'} have left for ${target}.`);
   }
@@ -187,7 +216,9 @@
   document.querySelectorAll('[data-view="map"]').forEach(b => b.addEventListener('click', () => navigate('map')));
   document.querySelectorAll('[data-view="reports"]').forEach(b => b.addEventListener('click', () => navigate('reports')));
   $('#quickBuild').onclick = showBuild; $('#addOrder').onclick = showBuild; $('#villageSelect').onclick = showVillage; $('#tribeBtn').onclick = () => openModal(`<div class="eyebrow">TRIBE HALL · ALLIANCE</div><h2>The Reedbound</h2><p>“Where the river bends, the reeds hold.” Your tribe is an alliance of twelve villages sworn to keep the valley free.</p><div class="tribe-stats"><div><b>12</b><small>MEMBERS</small></div><div><b>#08</b><small>RANK</small></div><div><b>6,420</b><small>RENOWN</small></div></div><div class="modal-note">Members online: Kael Reedhand, Mara-of-the-Reeds, Alder Fenwalker, and you.</div>`);
-  $('#notifications').onclick = () => { const m = state.marches.length; openModal(`<div class="eyebrow">MESSENGER BIRDS</div><h2>${m ? `${m} dispatch${m > 1 ? 'es' : ''} on the road.` : 'All quiet in the valley.'}</h2><p>${m ? state.marches.map(x => `${x.kind === 'scout' ? 'Scouts' : 'Warband'} returning from ${x.target} in ${Math.max(1, Math.ceil((x.returnAt - Date.now()) / 1000))} seconds.`).join('<br>') : 'Your people have no urgent messages. Check the chronicle for recent news.'}</p><button class="primary-button modal-submit" id="openReports">Read the chronicle</button>`); $('#openReports').onclick = showReports; };
+  $('#notifications').onclick = () => { const m = state.marches.length; openModal(`<div class="eyebrow">MESSENGER BIRDS</div><h2>${m ? `${m} dispatch${m > 1 ? 'es' : ''} on the road.` : 'All quiet in the valley.'}</h2><p>${m ? state.marches.map(x => `${x.kind === 'scout' ? 'Scouts' : 'Warband'} returning from ${x.target} in ${Math.max(1, Math.ceil((x.returnAt - gameNow()) / 1000))} seconds.`).join('<br>') : 'Your people have no urgent messages. Check the chronicle for recent news.'}</p><button class="primary-button modal-submit" id="openReports">Read the chronicle</button>`); $('#openReports').onclick = showReports; };
   $('#helpBtn').onclick = () => openModal('<div class="eyebrow">FIELD GUIDE · FIRST STEPS</div><h2>Make your mark on the valley.</h2><p><b>Gather.</b> Timber, stone, and iron trickle in over time, even while you are away.<br><br><b>Build.</b> Upgrade your village through the “Build something” button. Higher production buildings increase your hourly income.<br><br><b>Recruit.</b> Train units in the Barracks, then select an enemy settlement on the map to scout or raid.<br><br><b>Belong.</b> You are one of twelve members of the Reedbound tribe. Allies are marked in green; rivals in rust.<br><br>Your game saves automatically in this browser.</p>');
-  drawMap(); drawResources(); tick(); setInterval(tick, 1000);
+  drawMap(); drawResources(); tick();
+  syncGlobalClock(); setInterval(syncGlobalClock, 300_000);
+  setInterval(tick, 1000);
 })();
